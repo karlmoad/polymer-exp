@@ -83,7 +83,7 @@ Code set management component
             },
             code:{},
             _openAdd: function(){
-                this.code = {set:"zing", id:"zonk", values: [{attr:"one", value:"1"},{attr:"two", value:"2"}]};
+                this.code = {set:"ZING", id:"ZONK", values: [{attr:"ONE", value:"1"},{attr:"TWO", value:"2"}]};
                 this.$.side.open();
             },
             _openEdit: function(){
@@ -91,7 +91,6 @@ Code set management component
             },
             _saveEdit: function(e){
                 this.$.side.close();
-                alert(e.detail.set);
                 this.push('codes', e.detail);
                 this.$.codeGrid.size = this.codes.length;
             },

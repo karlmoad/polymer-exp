@@ -5,6 +5,7 @@
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/iron-data-table/iron-data-table.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 
 
@@ -16,44 +17,65 @@
             }
             .editor {
                 height: 100%;
-                overflow: auto;
                 margin: 10px 25px 10px 25px;
+                overflow: auto;
+                align-items: flex-start;
+                display: block;
             }
-        </style>
+            .editor-controls {
+                display: flex;
+                flex-direction: row;
+                @apply(--codeset-edit-edit-theme);
+            }
+            .dialog-controls {
+                display: flex;
+                flex-direction: row-reverse;
+                @apply(--codeset-edit-controls-theme);
+            }
 
+        </style>
         <div class="editor">
             <div classs="editor-controls">
-                <p>
-                    <paper-input id="txtSet" disabled="[[editmode]]" label="code set" value="{{code.set}}"></paper-input>
-                </p>
-                <p>
-                    <paper-input id="txtCode" disabled="[[editmode]]" label="code" value="{{code.id}}"></paper-input>
-                </p>
-                <p>
-                    <iron-data-table size="100" items="[[code.values]]" selection-enabled>
-                        <data-table-column width="90px" flex="0">
-                            <template>
-                                <div hidden="[[!selected]]">
-                                    <paper-icon-button icon="clear" on-tap="_removeValue"></paper-icon-button>
-                                </div>
-                            </template>
-                        </data-table-column>
-                        <data-table-column name="Attr" sort-by="attr">
-                            <template>[[item.attr]]</template>
-                        </data-table-column>
-                        <data-table-column name="Value">
-                            <template>[[item.value]]</template>
-                        </data-table-column>
-                    </iron-data-table>
-                </p>
+
+                <paper-input id="txtSet" disabled="[[editmode]]" label="code set (in CAPS)" value="{{code.set}}" auto-validate allowed-pattern="[A-Z]"></paper-input>
+
+                <paper-input id="txtCode" disabled="[[editmode]]" label="code (in CAPS)" value="{{code.id}}" auto-validate allowed-pattern="[A-Z]"></paper-input>
+
+                <paper-icon-button icon="add" on-tap="_showDialog" horizontal-align="left"></paper-icon-button>
+
+                <iron-data-table size="100" items="[[code.values]]" selection-enabled>
+                    <data-table-column width="90px" flex="0">
+                        <template>
+                            <div hidden="[[!selected]]">
+                                <paper-icon-button icon="clear" on-tap="_removeValue"></paper-icon-button>
+                            </div>
+                        </template>
+                    </data-table-column>
+                    <data-table-column name="Attr" sort-by="attr">
+                        <template>[[item.attr]]</template>
+                    </data-table-column>
+                    <data-table-column name="Value">
+                        <template>[[item.value]]</template>
+                    </data-table-column>
+                </iron-data-table>
+
+
             </div>
-            <p>
-            <div class="buttons">
+            <div class="dialog-controls">
                 <paper-button id="btnSave" raised on-tap="_save"><iron-icon icon="save"></iron-icon>Save</paper-button>
                 <paper-button id="btnCancel" raised on-tap="_cancel"><iron-icon icon="cancel"></iron-icon>Cancel</paper-button>
             </div>
-            </p>
         </div>
+
+        <paper-dialog id="addNewAttrDialog" modal>
+            <paper-input label="Attr name (in CAPS)" value="{{attr}}" auto-validate allowed-pattern="[A-Z]"></paper-input>
+            <paper-input label="Value" value="{{val}}"></paper-input>
+            <div class="buttons">
+                <paper-button on-tap="_declineDialog">Decline</paper-button>
+                <paper-button on-tap="_acceptDialog">Accept</paper-button>
+            </div>
+        </paper-dialog>
+
     </template>
     <script>
         Polymer({
@@ -67,22 +89,41 @@
                     type: Object,
                 }
             },
+            attr: null,
+            val: null,
             _removeValue: function(){
 
             },
             _save: function(){
                 var d = this._composeObject();
-                alert(JSON.stringify(d));
                 this.fire('save', d);
             },
             _cancel: function(){
                 this.fire('cancel')
             },
+            _showDialog: function(){
+                this._resetDialog();
+                this.$.addNewAttrDialog.toggle();
+            },
+            _resetDialog: function(){
+                this.attr = null;
+                this.val = null;
+            },
+            _declineDialog: function(){
+                this.$.addNewAttrDialog.toggle();
+                this._resetDialog();
+            },
+            _acceptDialog:function(){
+                this.$.addNewAttrDialog.toggle();
+                var d = { attr: this.attr, value: this.val};
+                this.push('code.values', d);
+                this._resetDialog();
+            },
             _composeObject: function(){
                 var out = {};
-                out['id'] = this.code.set
-                out['codes'] = [];
-                out['codes'].push({id: this.code.id, values: this.code.values});
+                out['set'] = this.code.set
+                out['code'] = this.code.id;
+                out['values'] = this.code.values;
                 return out;
             },
             ready: function(){
