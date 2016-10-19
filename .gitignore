@@ -38,7 +38,7 @@ jspm_packages
 
 # IntelliJ
 /.idea/
-/polymer-exp.iml
+/*.iml
 
 # bower
 /bower_components/
