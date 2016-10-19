@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+
+<dom-module id="drop-dialog">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+        </style>
+        <paper-dropdown-menu label="Dinosaurs">
+            <paper-listbox id="sel_dinos" class="dropdown-content">
+                <template is="dom-repeat" items="{{items}}">
+                    <paper-item>{{item}}</paper-item>
+                </template>
+                <paper-item>
+                    <paper-button raised on-tap="_showDialog">Add</paper-button>
+                </paper-item>
+            </paper-listbox>
+        </paper-dropdown-menu>
+
+
+        <paper-dialog id="addNewDialog" modal>
+            <paper-input label="Dinosaur Species" value="{{newValue}}"></paper-input>
+            <div class="buttons">
+                <paper-button on-tap="_declineDialog">Decline</paper-button>
+                <paper-button on-tap="_acceptDialog">Accept</paper-button>
+            </div>
+        </paper-dialog>
+    </template>
+
+    <script>
+        Polymer({
+
+            is: 'drop-dialog',
+
+            properties: {
+                itm:{
+                    type: Object,
+                    notify: true
+                },
+                items:{
+                    type: Array,
+                    notify: true
+                },
+                newValue:{
+                    type: String,
+                    notify: true
+                }
+            },
+            ready: function(){
+                var dinos = ["dino 1", "dino 2", "dino 3", "dino 4", "dino 5"];
+                this.items = dinos;
+            },
+            _showDialog: function(){
+                this.$.addNewDialog.toggle();
+            },
+            _closeDialog: function(){
+                this.$.addNewDialog.toggle();
+            },
+            _itemSelected: function(e){
+                this.itm = e.target.selected;
+                if(this.itm){
+                    alert(this.itm);
+                }
+            },
+            _declineDialog: function(){
+                this.$.sel_dinos.selected = 0;
+                this.newValue = null;
+                this._closeDialog();
+            },
+            _acceptDialog: function(){
+                this.push("items", this.newValue);
+                this.$.sel_dinos.selected = this.items.length - 1;
+                this.$.sel_dinos._updateItems();
+                this.newValue = null;
+                this._closeDialog();
+            }
+        });
+    </script>
+</dom-module>

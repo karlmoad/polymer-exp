@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../my-icons.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/iron-data-table/iron-data-table.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+
+<dom-module id="codeset-component-edit">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+            .editor {
+                height: 100%;
+                overflow: auto;
+                margin: 10px 25px 10px 25px;
+            }
+        </style>
+
+        <div class="editor">
+            <div classs="editor-controls">
+                <p>
+                    <paper-input id="txtSet" disabled="[[editmode]]" label="code set" value="{{code.set}}"></paper-input>
+                </p>
+                <p>
+                    <paper-input id="txtCode" disabled="[[editmode]]" label="code" value="{{code.id}}"></paper-input>
+                </p>
+                <p>
+                    <iron-data-table size="100" items="[[code.values]]" selection-enabled>
+                        <data-table-column width="90px" flex="0">
+                            <template>
+                                <div hidden="[[!selected]]">
+                                    <paper-icon-button icon="clear" on-tap="_removeValue"></paper-icon-button>
+                                </div>
+                            </template>
+                        </data-table-column>
+                        <data-table-column name="Attr" sort-by="attr">
+                            <template>[[item.attr]]</template>
+                        </data-table-column>
+                        <data-table-column name="Value">
+                            <template>[[item.value]]</template>
+                        </data-table-column>
+                    </iron-data-table>
+                </p>
+            </div>
+            <p>
+            <div class="buttons">
+                <paper-button id="btnSave" raised on-tap="_save"><iron-icon icon="save"></iron-icon>Save</paper-button>
+                <paper-button id="btnCancel" raised on-tap="_cancel"><iron-icon icon="cancel"></iron-icon>Cancel</paper-button>
+            </div>
+            </p>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: 'codeset-component-edit',
+            properties:{
+                editmode:{
+                    type: Boolean,
+                    notify: true
+                },
+                code: {
+                    type: Object,
+                }
+            },
+            _removeValue: function(){
+
+            },
+            _save: function(){
+                var d = this._composeObject();
+                alert(JSON.stringify(d));
+                this.fire('save', d);
+            },
+            _cancel: function(){
+                this.fire('cancel')
+            },
+            _composeObject: function(){
+                var out = {};
+                out['id'] = this.code.set
+                out['codes'] = [];
+                out['codes'].push({id: this.code.id, values: this.code.values});
+                return out;
+            },
+            ready: function(){
+
+            }
+        });
+    </script>
+</dom-module>

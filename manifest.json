@@ -1,0 +1,6 @@
+{
+  "name": "exp",
+  "short_name": "exp",
+  "start_url": "/",
+  "display": "standalone"
+}

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../my-icons.html">
+<link rel="import" href="../../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/iron-data-table/iron-data-table.html">
+<link rel="import" href="../../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="./codeset-component-edit.html">
+
+<script src="./serviceInterface.js"></script>
+<!--
+`codeset-component`
+Code set management component
+
+@demo demo/index.html
+-->
+
+<dom-module id="codeset-component">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+
+            .buttons {
+                float: right;
+            }
+
+            .slide-out{
+                --app-drawer-width: var(--editor-witdh, 400px);
+            }
+
+        </style>
+        <app-drawer-layout fullbleed force-narrow>
+            <app-drawer id="side" class="slide-out" align="end">
+                <codeset-component-edit id="editor" on-save="_saveEdit" on-cancel="_cancelEdit" code="{{code}}"></codeset-component-edit>
+            </app-drawer>
+            <div class="mainContent">
+                    <div class="buttons">
+                        <paper-button id="btnAdd" raised on-tap="_openAdd"><iron-icon icon="add"></iron-icon>Add</paper-button>
+                    </div>
+                    <div class="grid">
+                        <iron-data-table id="codeGrid" items="[[codes]]" selection-enabled>
+                            <data-table-column width="90px" flex="0">
+                                <template>
+                                    <div hidden="[[!selected]]">
+                                        <paper-icon-button icon="clear"></paper-icon-button>
+                                        <paper-icon-button icon="edit"></paper-icon-button>
+                                    </div>
+                                </template>
+                            </data-table-column>
+                            <data-table-column name="Set" sort-by="set" filter-by="set">
+                                <template>[[item.set]]</template>
+                            </data-table-column>
+                            <data-table-column name="Code" sort-by="code" filter-by="code">
+                                <template>[[item.code]]</template>
+                            </data-table-column>
+                        </iron-data-table>
+                    </div>
+            </div>
+        </app-drawer-layout>
+    </template>
+
+    <script>
+        Polymer({
+
+            is: 'codeset-component',
+
+            properties: {
+                api: {
+                    type: String
+                },
+                token:{
+                    type: String
+                },
+                codes:{
+                    type: Array,
+                    value:[]
+                },
+            },
+            code:{},
+            _openAdd: function(){
+                this.code = {set:"zing", id:"zonk", values: [{attr:"one", value:"1"},{attr:"two", value:"2"}]};
+                this.$.side.open();
+            },
+            _openEdit: function(){
+                this.$.side.open();
+            },
+            _saveEdit: function(e){
+                this.$.side.close();
+                alert(e.detail.set);
+                this.push('codes', e.detail);
+                this.$.codeGrid.size = this.codes.length;
+            },
+            _cancelEdit: function(){
+                this.$.side.close();
+            },
+            _getData: function(err, r){
+                if(!err){
+                    //this.push("codes", r);
+                    this.$.codeGrid.size = this.codes.length;
+                    this.codes = r;
+                }
+            },
+            ready:function(){
+                this.service = new ServiceInterface(this.api);
+                this.service.getData(this._getData.bind(this));
+            }
+        });
+    </script>
+</dom-module>
