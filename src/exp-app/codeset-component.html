@@ -9,6 +9,7 @@
 <link rel="import" href="../../bower_components/app-layout/app-header-layout/app-header-layout.html">
 <link rel="import" href="../../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
 <link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="./codeset-component-edit.html">
 
@@ -27,44 +28,42 @@ Code set management component
                 display: block;
             }
 
-            .buttons {
-                float: right;
-            }
-
-            .slide-out{
-                --app-drawer-width: var(--editor-witdh, 400px);
+            paper-dialog.editor{
+                width: 450px;
+                overflow: auto;
             }
 
         </style>
-        <app-drawer-layout fullbleed force-narrow>
-            <app-drawer id="side" class="slide-out" align="end">
-                <codeset-component-edit id="editor" on-save="_saveEdit" on-cancel="_cancelEdit" code="{{code}}"></codeset-component-edit>
-            </app-drawer>
-            <app-header-layout fixed>
-                <app-toolbar>
-                    <span class="title">Code Set Management</span>
-                    <paper-icon-button icon="add" on-tap="_openAdd"></paper-icon-button>
-                </app-toolbar>
-                    <div class="grid">
-                        <iron-data-table id="codeGrid" items="[[codes]]" selection-enabled>
-                            <data-table-column width="90px" flex="0">
-                                <template>
-                                    <div hidden="[[!selected]]">
-                                        <paper-icon-button icon="clear"></paper-icon-button>
-                                        <paper-icon-button icon="edit"></paper-icon-button>
-                                    </div>
-                                </template>
-                            </data-table-column>
-                            <data-table-column name="Set" sort-by="set" filter-by="set">
-                                <template>[[item.set]]</template>
-                            </data-table-column>
-                            <data-table-column name="Code" sort-by="code" filter-by="code">
-                                <template>[[item.code]]</template>
-                            </data-table-column>
-                        </iron-data-table>
-                    </div>
-            </app-header-layout>
-        </app-drawer-layout>
+        <app-header-layout fixed fullbleed>
+            <app-toolbar>
+                <div main-title>Code Set Management</div>
+                <paper-icon-button icon="add" on-tap="_openAdd"></paper-icon-button>
+            </app-toolbar>
+            <div class="grid">
+                <iron-data-table id="codeGrid" items="[[codes]]" selection-enabled>
+                    <data-table-column width="90px" flex="0">
+                        <template>
+                            <div hidden="[[!selected]]">
+                                <paper-icon-button icon="clear"></paper-icon-button>
+                                <paper-icon-button icon="edit"></paper-icon-button>
+                            </div>
+                        </template>
+                    </data-table-column>
+                    <data-table-column name="Set" sort-by="set" filter-by="set">
+                        <template>[[item.set]]</template>
+                    </data-table-column>
+                    <data-table-column name="Code" sort-by="code" filter-by="code">
+                        <template>[[item.code]]</template>
+                    </data-table-column>
+                </iron-data-table>
+            </div>
+        </app-header-layout>
+
+
+        <paper-dialog id="editorDialog" class="editor"  modal>
+            <codeset-component-edit id="editor" on-save="_saveEdit" on-cancel="_cancelEdit" code="{{code}}"></codeset-component-edit>
+        </paper-dialog>
+
     </template>
 
     <script>
@@ -87,18 +86,18 @@ Code set management component
             code:{},
             _openAdd: function(){
                 this.code = {set:"ZING", id:"ZONK", values: [{attr:"ONE", value:"1"},{attr:"TWO", value:"2"}]};
-                this.$.side.open();
+                this.$.editorDialog.open();
             },
             _openEdit: function(){
-                this.$.side.open();
+                this.$.editorDialog.open();
             },
             _saveEdit: function(e){
-                this.$.side.close();
+                this.$.editorDialog.close();
                 this.push('codes', e.detail);
                 this.$.codeGrid.size = this.codes.length;
             },
             _cancelEdit: function(){
-                this.$.side.close();
+                this.$.editorDialog.close();
             },
             _getData: function(err, r){
                 if(!err){

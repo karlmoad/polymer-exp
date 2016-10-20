@@ -16,28 +16,40 @@
             :host {
                 display: block;
             }
-            .editor {
+            div.main {
                 margin: 0 20px;
+
+            }
+            div.spacer {
+                height: 35px;
+            }
+            paper-dialog.subDialog {
 
             }
 
         </style>
 
         <app-toolbar>
-            <span class="title">{{mode}}</span>
+            <template is="dom-if" if="{{dirty}}">
+                <iron-icon icon="dirty"></iron-icon>
+            </template>
+            <div>{{mode}}</div>
             <paper-icon-button icon="save" on-tap="_save"></paper-icon-button>
+            <div main-title></div>
             <paper-icon-button icon="close" on-tap="_cancel"></paper-icon-button>
         </app-toolbar>
-        <div classs="editor">
+        <div class="main">
 
             <paper-input id="txtSet" disabled="[[editmode]]" label="code set (in CAPS)" value="{{code.set}}" auto-validate allowed-pattern="[A-Z]"></paper-input>
 
             <paper-input id="txtCode" disabled="[[editmode]]" label="code (in CAPS)" value="{{code.id}}" auto-validate allowed-pattern="[A-Z]"></paper-input>
 
+            <div class="spacer"></div>
+
             <paper-icon-button icon="add" on-tap="_showDialog" horizontal-align="left"></paper-icon-button>
 
             <iron-data-table size="100" items="[[code.values]]" selection-enabled>
-                <data-table-column width="90px" flex="0">
+                <data-table-column width="10px" flex="0">
                     <template>
                         <div hidden="[[!selected]]">
                             <paper-icon-button icon="clear" on-tap="_removeValue"></paper-icon-button>
@@ -54,12 +66,12 @@
 
 
         </div>
-        <paper-dialog id="addNewAttrDialog" modal>
+        <paper-dialog id="addNewAttrDialog" class="subDialog" modal>
             <paper-input label="Attr name (in CAPS)" value="{{attr}}" auto-validate allowed-pattern="[A-Z]"></paper-input>
             <paper-input label="Value" value="{{val}}"></paper-input>
             <div class="buttons">
-                <paper-button on-tap="_declineDialog">Decline</paper-button>
-                <paper-button on-tap="_acceptDialog">Accept</paper-button>
+                <paper-button on-tap="_declineDialog">Cancel</paper-button>
+                <paper-button on-tap="_acceptDialog">OK</paper-button>
             </div>
         </paper-dialog>
 
@@ -74,14 +86,20 @@
                 },
                 code: {
                     type: Object,
+                    notify: true
                 },
-                mode:{
+                dirty:{
+                    type: Boolean,
+                    notify:true
+                },
+                mode: {
                     type: String,
-                    value: function(){
+                    value: function () {
                         return (this.editmode ? "Edit" : "Add");
                     }
                 }
             },
+            serviceCall: null,
             attr: null,
             val: null,
             _removeValue: function(){
@@ -96,18 +114,19 @@
             },
             _showDialog: function(){
                 this._resetDialog();
-                this.$.addNewAttrDialog.toggle();
+                this.$.addNewAttrDialog.open();
             },
             _resetDialog: function(){
                 this.attr = null;
                 this.val = null;
             },
             _declineDialog: function(){
-                this.$.addNewAttrDialog.toggle();
+                this.$.addNewAttrDialog.close();
                 this._resetDialog();
             },
-            _acceptDialog:function(){
-                this.$.addNewAttrDialog.toggle();
+            _acceptDialog: function(){
+                this.set('dirty', true);
+                this.$.addNewAttrDialog.close();
                 var d = { attr: this.attr, value: this.val};
                 this.push('code.values', d);
                 this._resetDialog();
