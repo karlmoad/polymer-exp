@@ -11,6 +11,7 @@
 <link rel="import" href="../../bower_components/app-layout/app-toolbar/app-toolbar.html">
 <link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="./codeset-component-edit.html">
 
 <script src="./serviceInterface.js"></script>
@@ -32,7 +33,10 @@ Code set management component
                 width: 450px;
                 overflow: auto;
             }
-
+            .toast-button {
+                 text-transform: none;
+                 color: #eeff41;
+            }
         </style>
         <app-header-layout fixed fullbleed>
             <app-toolbar>
@@ -40,29 +44,44 @@ Code set management component
                 <paper-icon-button icon="add" on-tap="_openAdd"></paper-icon-button>
             </app-toolbar>
             <div class="grid">
-                <iron-data-table id="codeGrid" items="[[codes]]" selection-enabled>
+                <iron-data-table id="gridCodes" items="[[codes]]" selection-enabled>
                     <data-table-column width="90px" flex="0">
                         <template>
                             <div hidden="[[!selected]]">
-                                <paper-icon-button icon="clear"></paper-icon-button>
-                                <paper-icon-button icon="edit"></paper-icon-button>
+                                <paper-icon-button icon="clear" on-tap="_delItem"></paper-icon-button>
+                                <paper-icon-button icon="edit" on-tap="_editItem"></paper-icon-button>
                             </div>
                         </template>
                     </data-table-column>
                     <data-table-column name="Set" sort-by="set" filter-by="set">
                         <template>[[item.set]]</template>
                     </data-table-column>
-                    <data-table-column name="Code" sort-by="code" filter-by="code">
-                        <template>[[item.code]]</template>
+                    <data-table-column name="Code" sort-by="id" filter-by="id">
+                        <template>[[item.id]]</template>
                     </data-table-column>
                 </iron-data-table>
             </div>
+            <footer style="position:fixed;bottom:0">
+                Note: All values are case sensitive hence code != CODE
+            </footer>
         </app-header-layout>
 
 
         <paper-dialog id="editorDialog" class="editor"  modal>
-            <codeset-component-edit id="editor" on-save="_saveEdit" on-cancel="_cancelEdit" code="{{code}}"></codeset-component-edit>
+            <codeset-component-edit id="editor" on-save="_saveEdit" on-cancel="_cancelEdit" code="{{code}}" editmode="{{editmode}}"></codeset-component-edit>
         </paper-dialog>
+        <paper-dialog id="confirmDialog" class="confirm" modal>
+            <div class="message">Do you wish to delete this code, this action is can not be rolled back.</div>
+            <paper-input id="txtDel" label="Type the code id to confirm" auto-validate allowed-pattern="[a-zA-Z0-9]" error-message="Invalid entry"></paper-input>
+            <div class="buttons">
+                <paper-button on-tap="_declineDelete">Cancel</paper-button>
+                <paper-button on-tap="_acceptDelete">OK</paper-button>
+            </div>
+        </paper-dialog>
+        <paper-toast id="toast" duration="0">
+            <paper-icon-button icon="close" class="toast-button" on-tap="_closeToast"></paper-icon-button>
+        </paper-toast>
+
 
     </template>
 
@@ -84,17 +103,45 @@ Code set management component
                 },
             },
             code:{},
+            editmode: true,
+            _acceptDelete: function(){
+                var c = this.$.gridCodes.selectedItem;
+                if(c.id.toUpperCase() === this.$.txtDel.value.toUpperCase()){
+
+                    this.$.toast.text = "Deleted " + c.id;
+                    this.$.confirmDialog.close();
+                    this.$.toast.open();
+                    this.$.txtDel.invalid = false;
+                }
+                else{
+                    this.$.txtDel.invalid = true;
+                }
+
+            },
+            _closeToast: function(){
+                this.$.toast.close();
+            },
+            _declineDelete: function(){
+                this.$.confirmDialog.close();
+            },
+
             _openAdd: function(){
-                this.code = {set:"ZING", id:"ZONK", values: [{attr:"ONE", value:"1"},{attr:"TWO", value:"2"}]};
+                this.code = {set:null, id:null, values: []};
+                this.editmode = false;
                 this.$.editorDialog.open();
             },
-            _openEdit: function(){
+            _editItem: function(){
+                this.code = this.$.gridCodes.selectedItem;
+                this.editmode = true;
                 this.$.editorDialog.open();
+            },
+            _delItem: function(){
+                this.$.confirmDialog.open();
             },
             _saveEdit: function(e){
                 this.$.editorDialog.close();
                 this.push('codes', e.detail);
-                this.$.codeGrid.size = this.codes.length;
+                this.$.gridCodes.size = this.codes.length;
             },
             _cancelEdit: function(){
                 this.$.editorDialog.close();
@@ -102,7 +149,7 @@ Code set management component
             _getData: function(err, r){
                 if(!err){
                     //this.push("codes", r);
-                    this.$.codeGrid.size = this.codes.length;
+                    this.$.gridCodes.size = this.codes.length;
                     this.codes = r;
                 }
             },
