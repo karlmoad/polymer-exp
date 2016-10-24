@@ -97,7 +97,6 @@
                 }
             },
 
-            serviceCall: null,
             attr: null,
             val: null,
             mode: "",
@@ -133,7 +132,7 @@
             },
             _save: function(){
                 if(this._validate()) {
-                    var d = this._composeObject();
+                    var d = {code: this._composeObject(), edit: this.editmode };
                     this.fire('save', d);
                 }
             },
@@ -163,7 +162,7 @@
                     var c = this.$.txtCode.value;
 
                     var setGood = true;
-                    if(s.trim.length <= 0){
+                    if(s.trim().length <= 0){
                         setGood = false;
                         out = setGood;
                     }
@@ -171,7 +170,7 @@
                     this.$.txtSet.invalid = setGood;
 
                     var codeGood = true;
-                    if(c.trim.length <= 0){
+                    if(c.trim().length <= 0){
                         codeGood = false;
                         out = codeGood;
                     }
@@ -187,7 +186,7 @@
 
                 //Check for dup attribute names, not allowed prompt to delete first
                 var ev = function(v){
-                    return v.attr.toUpperCase() === this.$.txtAttr.value.toUpperCase();
+                    return v.id.toUpperCase() === this.$.txtAttr.value.toUpperCase();
                 }.bind(this);
 
                 var out = !this.code.values.some(ev);
@@ -217,7 +216,7 @@
             _composeObject: function(){
                 var out = {};
                 out['set'] = this.code.set
-                out['code'] = this.code.id;
+                out['id'] = this.code.id;
                 out['values'] = this.code.values;
                 return out;
             },

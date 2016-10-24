@@ -68,7 +68,7 @@ Code set management component
 
 
         <paper-dialog id="editorDialog" class="editor"  modal>
-            <codeset-component-edit id="editor" on-save="_saveEdit" on-cancel="_cancelEdit" code="{{code}}" editmode="{{editmode}}"></codeset-component-edit>
+            <codeset-component-edit id="editor" on-save="_saveEdit" on-cancel="_cancelEdit" code="[[code]]" editmode="[[editmode]]"></codeset-component-edit>
         </paper-dialog>
         <paper-dialog id="confirmDialog" class="confirm" modal>
             <div class="message">Do you wish to delete this code, this action is can not be rolled back.</div>
@@ -107,11 +107,7 @@ Code set management component
             _acceptDelete: function(){
                 var c = this.$.gridCodes.selectedItem;
                 if(c.id.toUpperCase() === this.$.txtDel.value.toUpperCase()){
-
-                    this.$.toast.text = "Deleted " + c.id;
-                    this.$.confirmDialog.close();
-                    this.$.toast.open();
-                    this.$.txtDel.invalid = false;
+                    this.service.deleteCode(c,this._deleteCallback.bind(this));
                 }
                 else{
                     this.$.txtDel.invalid = true;
@@ -140,11 +136,63 @@ Code set management component
             },
             _saveEdit: function(e){
                 this.$.editorDialog.close();
-                this.push('codes', e.detail);
-                this.$.gridCodes.size = this.codes.length;
+
+                this.service.saveCode(e.detail,this._saveCallback.bind(this));
             },
             _cancelEdit: function(){
                 this.$.editorDialog.close();
+            },
+            _deleteCallback: function(err, result){
+                var m="";
+
+                if(err){
+                    m = err;
+                }
+                else{
+                    m = result.message;
+                    var idx = this.codes.indexOf(result.code);
+                    this.splice("codes",idx,1);
+                }
+
+
+                this.$.toast.text = m ;
+                this.$.confirmDialog.close();
+                this.$.toast.open();
+                this.$.txtDel.invalid = false;
+
+            },
+            _findIndex: function(code){
+                for(var i =0; i< this.codes.length; i++){
+                    var c = this.codes[i];
+
+                    if(c.set === code.set && c.id===code.id){
+                        return i;
+                    }
+                }
+
+                return 0;
+            },
+            _saveCallback:function(err, result){
+                var m ="";
+
+                if(err){
+                    m = err;
+                }else{
+                    m = result.message;
+
+                    if(result.edit){
+                        var idx = this._findIndex(result.code);
+                        this.codes[idx] = result.code;
+                        this.notifyPath('codes');
+
+                    }else{
+                        this.push('codes', result.code);
+                        this.$.gridCodes.size = this.codes.length;
+                    }
+                }
+
+                this.$.toast.text = m ;
+                this.$.toast.open();
             },
             _getData: function(err, r){
                 if(!err){
@@ -154,8 +202,8 @@ Code set management component
                 }
             },
             ready:function(){
-                this.service = new ServiceInterface(this.api);
-                this.service.getData(this._getData.bind(this));
+                this.service = new ServiceInterface(this.api, this.token);
+                this.service.getCodes(this._getData.bind(this));
             }
         });
     </script>
