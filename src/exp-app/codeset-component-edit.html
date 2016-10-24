@@ -40,9 +40,9 @@
         </app-toolbar>
         <div class="main">
 
-            <paper-input id="txtSet" disabled="[[editmode]]" label="code set" value="{{code.set}}" auto-validate allowed-pattern="[a-zA-Z0-9]" change="_setChanged" error-message="Value Required"></paper-input>
+            <paper-input id="txtSet" disabled="[[editmode]]" label="code set" value="{{code.set}}" auto-validate allowed-pattern="[a-zA-Z0-9]" on-change="_changed" error-message="Value Required"></paper-input>
 
-            <paper-input id="txtCode" disabled="[[editmode]]" label="code" value="{{code.id}}" auto-validate allowed-pattern="[a-zA-Z0-9]" change="_idChanged" error-message="Value Required"></paper-input>
+            <paper-input id="txtCode" disabled="[[editmode]]" label="code" value="{{code.id}}" auto-validate allowed-pattern="[a-zA-Z0-9]" on-change="_changed" error-message="Value Required"></paper-input>
 
             <div class="spacer"></div>
 
@@ -113,10 +113,7 @@
                     this.mode = "Add";
                 }
             },
-            _setChanged: function(set){
-                this._setDirty();
-            },
-            _idChanged: function(id){
+            _changed: function(set){
                 this._setDirty();
             },
             _setDirty:function(){
@@ -145,7 +142,6 @@
             },
             _resetDialog: function(){
                 this.attr = null;
-                //this.$.txtAttr.errorMessage="";
                 this.val = null;
             },
             _declineDialog: function(){
@@ -220,6 +216,13 @@
                 out['values'] = this.code.values;
                 return out;
             },
+
+            reset: function(){
+                this.$.txtSet.invalid = false;
+                this.$.txtCode.invalid = false;
+                this.set('dirty', false);
+            },
+
             ready: function(){
 
             }

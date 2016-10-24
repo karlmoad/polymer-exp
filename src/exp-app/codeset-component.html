@@ -124,23 +124,31 @@ Code set management component
             _openAdd: function(){
                 this.code = {set:null, id:null, values: []};
                 this.editmode = false;
+                this.$.editor.reset();
                 this.$.editorDialog.open();
             },
             _editItem: function(){
                 this.code = this.$.gridCodes.selectedItem;
                 this.editmode = true;
+                this.$.editor.reset();
                 this.$.editorDialog.open();
             },
             _delItem: function(){
+                this._resetConfirm();
                 this.$.confirmDialog.open();
             },
             _saveEdit: function(e){
+                this.$.editor.reset();
                 this.$.editorDialog.close();
 
                 this.service.saveCode(e.detail,this._saveCallback.bind(this));
             },
             _cancelEdit: function(){
+                this.$.editor.reset();
                 this.$.editorDialog.close();
+            },
+            _resetConfirm: function(){
+                this.$.txtDel.value="";
             },
             _deleteCallback: function(err, result){
                 var m="";
@@ -157,6 +165,7 @@ Code set management component
 
                 this.$.toast.text = m ;
                 this.$.confirmDialog.close();
+                this._resetConfirm();
                 this.$.toast.open();
                 this.$.txtDel.invalid = false;
 
