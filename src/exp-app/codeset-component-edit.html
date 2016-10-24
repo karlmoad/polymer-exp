@@ -30,11 +30,10 @@
         </style>
 
         <app-toolbar>
-            <template is="dom-if" if="{{dirty}}">
-                <iron-icon icon="dirty"></iron-icon>
-            </template>
             <div>{{mode}}</div>
-            <paper-icon-button icon="save" on-tap="_save"></paper-icon-button>
+            <template is="dom-if" if="{{dirty}}">
+                <paper-icon-button icon="save" on-tap="_save"></paper-icon-button>
+            </template>
             <div main-title></div>
             <paper-icon-button icon="close" on-tap="_cancel"></paper-icon-button>
         </app-toolbar>
@@ -67,8 +66,8 @@
 
         </div>
         <paper-dialog id="addNewAttrDialog" class="subDialog" modal>
-            <paper-input label="Attr name (in CAPS)" value="{{attr}}" auto-validate allowed-pattern="[A-Z]"></paper-input>
-            <paper-input label="Value" value="{{val}}"></paper-input>
+            <paper-input id="txtAttr" label="Attr name (in CAPS)" value="{{attr}}" auto-validate allowed-pattern="[A-Z]"></paper-input>
+            <paper-input id="txtVal" label="Value" value="{{val}}"></paper-input>
             <div class="buttons">
                 <paper-button on-tap="_declineDialog">Cancel</paper-button>
                 <paper-button on-tap="_acceptDialog">OK</paper-button>
@@ -99,11 +98,29 @@
                     }
                 }
             },
+            observers:[
+                    '_setChanged(code.set)',
+                    '_idChanged(code.id)'
+            ],
+
             serviceCall: null,
             attr: null,
             val: null,
+
+            _setChanged: function(set){
+                this._setDirty();
+            },
+            _idChanged: function(id){
+                this._setDirty();
+            },
+            _setDirty:function(){
+                this.set('dirty', true);
+            },
             _removeValue: function(){
 
+
+
+                this._setDirty();
             },
             _save: function(){
                 var d = this._composeObject();
@@ -118,18 +135,34 @@
             },
             _resetDialog: function(){
                 this.attr = null;
+                //this.$.txtAttr.errorMessage="";
                 this.val = null;
             },
             _declineDialog: function(){
                 this.$.addNewAttrDialog.close();
                 this._resetDialog();
             },
+            _validateDialog: function(){
+                var out = !this.code.values.some(function(v){
+                    return v.attr.toUpperCase() === this.attr.toUpperCase();
+                });
+
+                alert(out);
+
+                if(!out){
+                    this.$.txtAttr.errorMessage="Attribute with this name already exists, delete it first";
+                }
+
+                return out;
+            },
             _acceptDialog: function(){
-                this.set('dirty', true);
-                this.$.addNewAttrDialog.close();
-                var d = { attr: this.attr, value: this.val};
-                this.push('code.values', d);
-                this._resetDialog();
+                if(this._validateDialog()) {
+                    this._setDirty();
+                    this.$.addNewAttrDialog.close();
+                    var d = {attr: this.attr, value: this.val};
+                    this.push('code.values', d);
+                    this._resetDialog();
+                }
             },
             _composeObject: function(){
                 var out = {};
