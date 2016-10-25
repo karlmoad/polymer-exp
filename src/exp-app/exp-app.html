@@ -16,7 +16,7 @@
         display: block;
       }
     </style>
-    <codeset-component api="http://localhost:32000/api"></codeset-component>
+    <codeset-component id="csComp" api="http://localhost:8000/api" token="eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJpYXQiOjE0Nzc0MDM4NzgsImp0aSI6IjEyMzQ1Njc4OSJ9.wKyVBl4MVcQrDlWgmTbuqObC3Q_HkjcHPoDVt7JMAOvkwRJL7VSCzqQ4yWRXmUNpMfWbTgGYgHvBBkJ-3Kw7Xw"></codeset-component>
   </template>
 
   <script>
@@ -28,7 +28,7 @@
 
       },
       ready: function(){
-
+        this.$.csComp.load();
       }
     });
   </script>

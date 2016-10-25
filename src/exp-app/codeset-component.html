@@ -41,7 +41,7 @@ Code set management component
         <app-header-layout fixed fullbleed>
             <app-toolbar>
                 <div main-title>Code Set Management</div>
-                <paper-icon-button icon="add" on-tap="_openAdd"></paper-icon-button>
+                <paper-icon-button id="btnAdd" icon="add" on-tap="_openAdd"></paper-icon-button>
             </app-toolbar>
             <div class="grid">
                 <iron-data-table id="gridCodes" items="[[codes]]" selection-enabled>
@@ -207,14 +207,26 @@ Code set management component
             },
             _getData: function(err, r){
                 if(!err){
-                    //this.push("codes", r);
-                    this.$.gridCodes.size = this.codes.length;
+                    this.$.toast.text = "";
+                    this.$.toast.close();
+                    this.$.btnAdd.disabled = false;
+
                     this.codes = r;
+                    this.$.gridCodes.size = this.codes.length;
+                }else{
+                    //something went wrong show error toast and disable add
+                    this.$.toast.text = "Error occurred contacting server";
+                    this.$.toast.open();
+                    this.$.btnAdd.disabled= true;
                 }
             },
-            ready:function(){
+
+            load: function(){
                 this.service = new ServiceInterface(this.api, this.token);
                 this.service.getCodes(this._getData.bind(this));
+            },
+            ready:function(){
+
             }
         });
     </script>
