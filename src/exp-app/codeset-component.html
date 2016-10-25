@@ -106,7 +106,7 @@ Code set management component
             editmode: true,
             _acceptDelete: function(){
                 var c = this.$.gridCodes.selectedItem;
-                if(c.id.toUpperCase() === this.$.txtDel.value.toUpperCase()){
+                if(c.id === this.$.txtDel.value){
                     this.service.deleteCode(c,this._deleteCallback.bind(this));
                 }
                 else{
@@ -128,7 +128,10 @@ Code set management component
                 this.$.editorDialog.open();
             },
             _editItem: function(){
-                this.code = this.$.gridCodes.selectedItem;
+
+                //shit clone method to unhook reference and prohibit unwanted changes trickling upward
+                //More memory intensive but most compatible with all browsers given lack of ES6 support
+                this.code = JSON.parse(JSON.stringify(this.$.gridCodes.selectedItem));
                 this.editmode = true;
                 this.$.editor.reset();
                 this.$.editorDialog.open();
@@ -191,8 +194,7 @@ Code set management component
 
                     if(result.edit){
                         var idx = this._findIndex(result.code);
-                        this.codes[idx] = result.code;
-                        this.notifyPath('codes');
+                        this.splice('codes',idx,1,result.code);
 
                     }else{
                         this.push('codes', result.code);
