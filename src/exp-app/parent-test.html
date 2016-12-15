@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="./sub-test.html">
+
+<dom-module id="parent-test">
+<style>
+    :host {
+        display: none;
+    }
+</style>
+<template>
+    <h1> Hello, check the console. </h1>
+    <content id="subs"></content>
+</template>
+<script>
+    Polymer({
+        is: 'parent-test',
+
+        ready: function(){
+            var els = Polymer.dom(this).getDistributedNodes();
+            els.forEach(function(el){
+                console.log(els.tagName)
+                console.log("Method:" + el.method);
+                console.log("Active" + ( el.active ? "True": "False"));
+            });
+        }
+    });
+</script>
+</dom-module>

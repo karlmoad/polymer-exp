@@ -5,9 +5,10 @@
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="./codeset-component.html">
-
-
+<link rel="import" href="./socket.html">
+<link rel="import" href="./socket-event.html">
 
 <dom-module id="exp-app">
   <template>
@@ -16,7 +17,22 @@
         display: block;
       }
     </style>
-    <codeset-component id="csComp" api="http://localhost:8000/api" token="<insert token here>"></codeset-component>
+    <!--<codeset-component id="csComp" api="http://localhost:8000/api" token="<insert token here>"></codeset-component>-->
+    <socketio-client token="eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJpYXQiOjE0ODE4Mjg0OTEsImp0aSI6IjEyMzQ1Njc4OSJ9.34YKkOYoGnLnvdykzB1dFZ8f96HO3i5uE8g9c78wXT4lV-N0e3zGEu7K4nOtxqkfwhZ7CvpE28r4AkZV-o2hWg" url="http://localhost:9000" auto secure>
+      <socketio-event listen="raise_alert" fire="alert" emitter></socketio-event>
+      <socketio-event listen="boom" fire="explode" receiver></socketio-event>
+    </socketio-client>
+
+
+    <paper-button on-tap="_fire">FIRE</paper-button>
+
+
+    <paper-toast id="pop" duration="0">
+      <paper-icon-button icon="close" class="toast-button" on-tap="_closeToast"></paper-icon-button>
+    </paper-toast>
+
+
+
   </template>
 
   <script>
@@ -27,8 +43,26 @@
       properties: {
 
       },
+
+      _fire: function(){
+          this.fire('raise_alert', {msg:"your F-ed"});
+          console.log("alert raised")
+      },
+
+      _alert: function(e){
+          console.log("alert received");
+          console.log(JSON.stringify(e.detail));
+          this.$.pop.text = "Exploded";
+          this.$.pop.open();
+      },
+
+      _closeToast: function(){
+          this.$.pop.close();
+      },
+
       ready: function(){
-        this.$.csComp.load();
+        //this.$.csComp.load();
+          document.addEventListener("explode", this._alert.bind(this));
       }
     });
   </script>

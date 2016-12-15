@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="socketio-event">
+    <style>
+        :host {
+            display: none;
+        }
+    </style>
+    <script>
+        Polymer({
+                is: 'socketio-event',
+                properties:{
+                    listen:{
+                        type: String,
+                        value: "default"
+                    },
+                    fire:{
+                        type: String,
+                        value: "default"
+                    },
+                    emitter:{
+                        type: Boolean,
+                        value: false
+                    },
+                    receiver:{
+                        type: Boolean,
+                        value: false
+                    }
+                },
+
+                ready: function(){
+                    this.parentNode.connect().then(this._register.bind(this));
+                },
+
+                attached: function(){
+                    this.parentNode.connect().then(this._enable.bind(this));
+                },
+
+                detached: function(){
+                    this.parentNode.connect().then(this._disable.bind(this));
+                },
+
+                _register: function(){
+                    if(this.emitter){
+                        this.parentNode.addEmitter(this.listen, this.fire, false);
+                    }
+
+                    if(this.receiver){
+                        this.parentNode.addReceiver(this.listen, this.fire, false);
+                    }
+                },
+
+                _enable: function(){
+                    if(this.emitter){
+                        this.parentNode.enableEmitter(this.fire);
+                    }
+
+                    if(this.receiver){
+                        this.parentNode.enableReceiver(this.listen);
+                    }
+                },
+
+                _disable: function(){
+                    if(this.emitter){
+                        this.parentNode.disableEmitter(this.fire);
+                    }
+
+                    if(this.receiver){
+                        this.parentNode.disableReceiver(this.listen);
+                    }
+                }
+            });
+    </script>
+</dom-module>
+
+

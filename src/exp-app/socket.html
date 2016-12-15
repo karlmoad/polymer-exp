@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<script src="../../bower_components/socket.io-client/dist/socket.io.js"></script>
+
+
+<dom-module id="socketio-client">
+    <style>
+        :host {
+            display: none;
+        }
+    </style>
+    <template>
+        <content></content>
+    </template>
+    <script>
+        Polymer({
+
+            is: 'socketio-client',
+
+            properties: {
+                url: {
+                    type: String
+                },
+                connected: {
+                    type: Boolean,
+                    readOnly: true,
+                    notify: true
+                },
+                status: {
+                    type: String,
+                    readOnly: true,
+                    notify: true
+                },
+                error: {
+                    type: Object,
+                    readOnly: true,
+                    notify: true
+                },
+                token: {
+                    type: String
+                },
+                auto: {
+                    type: Boolean,
+                    value: false
+                },
+                secure: {
+                    type: Boolean,
+                    value: false
+                }
+            },
+            socket: null,
+            emitters: {},
+            receivers: {},
+            _promise: null,
+
+            connect: function(force){
+                if(force || this.socket == null || !this.connected){
+                    //kill the socket if it is already open
+                    this.close();
+
+                    var connectedevt = function(){
+                        this._setControlStateInfo("connected", true, null, true);
+                        this._connected();
+                    }.bind(this);
+
+                    var errorevt = function(error){
+                        this._setControlStateInfo("error", false, error, true );
+                    }.bind(this);
+
+                    var disconnectevt = function(){
+                        this._setControlStateInfo("disconnected", false, null, true);
+                    }.bind(this);
+
+                    var reconnctingevt = function(){
+                        this._setControlStateInfo("reconnecting", false, null, true);
+                    }.bind(this);
+
+
+                    this._promise = new Promise(function(resolve, reject){
+
+                        var ready = function(){
+                            resolve('authorized');
+                        }.bind(this);
+
+                        this.socket = io.connect(this.url);
+                        this.socket.on("connect", connectedevt);
+                        this.socket.on("disconnect", disconnectevt);
+                        this.socket.on("reconnect", connectedevt);
+                        this.socket.on("reconnecting", reconnctingevt);
+                        this.socket.on("error", errorevt);
+                        this.socket.on("reconnect_error", errorevt);
+
+
+                        if(this.secure){
+                            this.socket.emit("authenticate", {token: this.token});
+                            this.socket.on("authenticated", ready);
+                            this.socket.on("unauthorized",function(){
+                                this._setControlStateInfo("error", false, "unauthorized", false );
+                                reject('unauthorized');
+                            }.bind(this));
+                        }else{
+                            ready();
+                        }
+
+
+                    }.bind(this));
+                }
+
+                return this._promise;
+            },
+
+            addEmitter: function(listen, emit, enabled){
+                if(!this.emitters[emit]){
+
+                    var enable = function(){
+                        //register a local event to listen on and emit on socket
+                        document.addEventListener(listen, function (e) {
+                            if(this.connected) this.socket.emit(emit, e.detail);
+                        }.bind(this));
+
+                    }.bind(this);
+
+                    var disable = function(){
+                        document.removeEventListener(listen);
+                    }.bind(this);
+
+                    //Add an item to the emitters object to keep multiple registrations from occurring
+                    this.emitters[emit] = {event: listen, active: false, enable:enable, disable: disable};
+
+                    if(enabled){
+                        this.enableEmitter(emit)
+                    }
+                }
+            },
+
+            enableEmitter: function(emit){
+                if(this.emitters[emit] && !this.emitters[emit].active){
+                    this.emitters[emit].active = true;
+                    this.emitters[emit].enable();
+                }
+            },
+
+            disableEmitter: function(emit){
+                if(this.emitters[emit] && this.emitters[emit].active){
+                    this.emitters[emit].active = false;
+                    this.emitters[emit].disable();
+                }
+            },
+
+
+            removeEmitter: function(emit){
+                if(this.emitters[emit]){
+                    if(this.emitters[emit].active) this.disableEmitter(emit);
+                    delete this.emitters[emit];
+                }
+            },
+
+
+            addReceiver: function(listen, fire, enabled){
+                if(!this.receivers[listen]) {
+                    this._setSocketListen(listen);
+                    var enable = function () {
+                        if (this.receivers[listen]) {
+                            this.receivers[listen].active = true;
+                        }
+                    }.bind(this);
+
+                    var disable = function () {
+                        if (this.receivers[listen]) {
+                            this.receivers[listen].active = false;
+                        }
+                    }.bind(this);
+
+                    this.receivers[event] = {fire: fire, active: false, enable: enable, disable: disable};
+
+                    if(enabled) this.receivers[listen].enable();
+                }
+            },
+
+            enableReceiver: function(listen){
+                if(this.receivers[listen]) this.receivers[listen].enable();
+            },
+
+            disableReceiver: function(listen){
+                if(this.receivers[listen]) this.receivers[listen].disable();
+            },
+
+            removeReceiver: function(listen){
+                if(this.receivers[listen]){
+                    this.receivers[listen].disable();
+                    delete this.receivers[listen];
+                }
+            },
+            close: function(){
+                this._unregisterEvents();
+                if(this.connected){
+                    this.socket.close();
+                    this.socket.destroy();
+                    this.socket = null;
+                }
+            },
+
+            fireConnectionStateChange: function(){
+                var evntd = {status: this.status, connected: this.connected};
+                this.fire('socketStateChange', evntd);
+            },
+
+
+            detached: function(){
+                this.close();
+            },
+
+            ready: function(){
+                if(this.auto){
+                    this.connect(true);
+                }
+            },
+
+            _setSocketListen: function(listen){
+                this.socket.on(listen, function(data){
+                    if(this.receivers[listen] && this.receivers[listen].active) {
+                        this._fireMessageEvent(listen, data);
+                    }
+                }.bind(this));
+            },
+
+            _fireMessageEvent: function(event, data){
+                this.fire(this.receivers[event].fire, data);
+            },
+
+            _setControlStateInfo: function( status, connected, error, fireStateChange){
+                this.status = status;
+                this.connected = connected;
+                this.error = error;
+                if(fireStateChange) this.fireConnectionStateChange();
+            },
+            
+            _unregisterEvents: function(){
+                for(var e in this.emitters){
+                    if(this.emitters.hasOwnProperty(e)){
+                        this.removeEmitter(e);
+                    }
+                }
+
+                for(var r in this.receivers){
+                    if(this.receivers.hasOwnProperty(r)){
+                        this.removeReceiver(r)
+                    }
+                }
+            }
+        });
+    </script>
+</dom-module>
+
+

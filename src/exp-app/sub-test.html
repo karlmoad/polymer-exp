@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<dom-module id="sub-test">
+<style>
+    :host {
+        display: none;
+    }
+</style>
+<template>
+    <h1> Hello, check the console. </h1>
+    <content id="subs"></content>
+</template>
+<script>
+    Polymer({
+        is: 'sub-test',
+        properties: {
+            method: {
+                type: String
+            },
+            active: {
+                type: Boolean,
+                readOnly: true,
+                notify: true
+            }
+        }
+    });
+</script>
+</dom-module>
