@@ -48,20 +48,22 @@
                     value: false
                 }
             },
+
             socket: null,
+
             emitters: {},
+
             receivers: {},
+
             _promise: null,
 
-            connect: function(force){
-                if(force || this.socket == null || !this.connected){
-                    //kill the socket if it is already open
-                    this.close();
+            connect: function(){
 
-                    var connectedevt = function(){
-                        this._setControlStateInfo("connected", true, null, true);
-                        this._connected();
-                    }.bind(this);
+                console.log("Connect called");
+
+                if(this._promise == null){
+
+                    console.log("Initializing Connection")
 
                     var errorevt = function(error){
                         this._setControlStateInfo("error", false, error, true );
@@ -79,29 +81,36 @@
                     this._promise = new Promise(function(resolve, reject){
 
                         var ready = function(){
+                            console.log("authorized");
+                            this._setControlStateInfo("connected", true, null, true);
                             resolve('authorized');
                         }.bind(this);
 
+                        var connected = function(){
+                            console.log("connected");
+
+                            if(this.secure){
+                                console.log("authenticating");
+
+                                this.socket.emit("authenticate", {token: this.token});
+                                this.socket.on("authenticated", ready);
+                                this.socket.on("unauthorized",function(){
+                                    console.log('unauthorized');
+                                    this._setControlStateInfo("error", false, "unauthorized", false );
+                                    reject('unauthorized');
+                                }.bind(this));
+                            }else{
+                                ready();
+                            }
+                        }.bind(this);
+
                         this.socket = io.connect(this.url);
-                        this.socket.on("connect", connectedevt);
+                        this.socket.on("connect", connected);
                         this.socket.on("disconnect", disconnectevt);
-                        this.socket.on("reconnect", connectedevt);
+                        this.socket.on("reconnect", connected);
                         this.socket.on("reconnecting", reconnctingevt);
                         this.socket.on("error", errorevt);
                         this.socket.on("reconnect_error", errorevt);
-
-
-                        if(this.secure){
-                            this.socket.emit("authenticate", {token: this.token});
-                            this.socket.on("authenticated", ready);
-                            this.socket.on("unauthorized",function(){
-                                this._setControlStateInfo("error", false, "unauthorized", false );
-                                reject('unauthorized');
-                            }.bind(this));
-                        }else{
-                            ready();
-                        }
-
 
                     }.bind(this));
                 }
@@ -155,7 +164,6 @@
                 }
             },
 
-
             addReceiver: function(listen, fire, enabled){
                 if(!this.receivers[listen]) {
                     this._setSocketListen(listen);
@@ -191,6 +199,7 @@
                     delete this.receivers[listen];
                 }
             },
+
             close: function(){
                 this._unregisterEvents();
                 if(this.connected){

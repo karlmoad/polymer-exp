@@ -11,11 +11,11 @@
         Polymer({
                 is: 'socketio-event',
                 properties:{
-                    listen:{
+                    tap:{
                         type: String,
                         value: "default"
                     },
-                    fire:{
+                    raise:{
                         type: String,
                         value: "default"
                     },
@@ -30,44 +30,53 @@
                 },
 
                 ready: function(){
+                    console.log("Ready set up parent connection");
                     this.parentNode.connect().then(this._register.bind(this));
                 },
 
                 attached: function(){
+                    console.log("attached enable events");
                     this.parentNode.connect().then(this._enable.bind(this));
                 },
 
                 detached: function(){
+                    console.log("detached disable events");
                     this.parentNode.connect().then(this._disable.bind(this));
                 },
 
                 _register: function(){
                     if(this.emitter){
+                        console.log("Adding Emitter: listen:%s fire:%s" , this.tap, this.raise);
                         this.parentNode.addEmitter(this.listen, this.fire, false);
                     }
 
                     if(this.receiver){
+                        console.log("Adding Receiver: listen:%s fire:%s" , this.tap, this.raise);
                         this.parentNode.addReceiver(this.listen, this.fire, false);
                     }
                 },
 
                 _enable: function(){
                     if(this.emitter){
-                        this.parentNode.enableEmitter(this.fire);
+                        console.log("Enableing Emitter: %s", this.raise);
+                        this.parentNode.enableEmitter(this.raise);
                     }
 
                     if(this.receiver){
-                        this.parentNode.enableReceiver(this.listen);
+                        console.log("Enableing Receiver: %s", this.tap);
+                        this.parentNode.enableReceiver(this.tap);
                     }
                 },
 
                 _disable: function(){
                     if(this.emitter){
-                        this.parentNode.disableEmitter(this.fire);
+                        console.log("Disableing Emitter: %s", this.raise);
+                        this.parentNode.disableEmitter(this.raise);
                     }
 
                     if(this.receiver){
-                        this.parentNode.disableReceiver(this.listen);
+                        console.log("Disableing Receiver: %s", this.tap);
+                        this.parentNode.disableReceiver(this.tap);
                     }
                 }
             });

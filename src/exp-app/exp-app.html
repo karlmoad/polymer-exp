@@ -18,9 +18,9 @@
       }
     </style>
     <!--<codeset-component id="csComp" api="http://localhost:8000/api" token="<insert token here>"></codeset-component>-->
-    <socketio-client token="eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJpYXQiOjE0ODE4Mjg0OTEsImp0aSI6IjEyMzQ1Njc4OSJ9.34YKkOYoGnLnvdykzB1dFZ8f96HO3i5uE8g9c78wXT4lV-N0e3zGEu7K4nOtxqkfwhZ7CvpE28r4AkZV-o2hWg" url="http://localhost:9000" auto secure>
-      <socketio-event listen="raise_alert" fire="alert" emitter></socketio-event>
-      <socketio-event listen="boom" fire="explode" receiver></socketio-event>
+    <socketio-client token="eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJpYXQiOjE0ODE4Mjg0OTEsImp0aSI6IjEyMzQ1Njc4OSJ9.34YKkOYoGnLnvdykzB1dFZ8f96HO3i5uE8g9c78wXT4lV-N0e3zGEu7K4nOtxqkfwhZ7CvpE28r4AkZV-o2hWg" url="http://localhost:9000" auto>
+      <socketio-event tap="raise_alert" raise="alert" emitter></socketio-event>
+      <socketio-event tap="boom" raise="explode" receiver></socketio-event>
     </socketio-client>
 
 
