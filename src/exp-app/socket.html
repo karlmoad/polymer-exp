@@ -23,18 +23,18 @@
                 },
                 connected: {
                     type: Boolean,
-                    readOnly: true,
-                    notify: true
+                    notify: true,
+                    value: false
                 },
                 status: {
                     type: String,
-                    readOnly: true,
-                    notify: true
+                    notify: true,
+                    value: "NONE"
                 },
                 error: {
                     type: Object,
-                    readOnly: true,
-                    notify: true
+                    notify: true,
+                    value: "NONE"
                 },
                 token: {
                     type: String
@@ -122,19 +122,25 @@
                 if(!this.emitters[emit]){
 
                     var enable = function(){
+                        console.log("Registering listener for event: "  + listen);
                         //register a local event to listen on and emit on socket
                         document.addEventListener(listen, function (e) {
-                            if(this.connected) this.socket.emit(emit, e.detail);
+                            console.log("Event:" + listen + " raised emitting Event: " + emit + " Data: " + JSON.stringify(e.detail));
+                            if(this.connected){
+                                console.log("Emitting, %s", (this.socket ? "T" : "F"));
+                                this.socket.emit(emit, e.detail);
+                            }
                         }.bind(this));
 
                     }.bind(this);
 
                     var disable = function(){
+                        console.log("Removing listener for event: "  + listen);
                         document.removeEventListener(listen);
                     }.bind(this);
 
                     //Add an item to the emitters object to keep multiple registrations from occurring
-                    this.emitters[emit] = {event: listen, active: false, enable:enable, disable: disable};
+                    this.emitters[emit] = {event: listen, emit: emit, active: false, enable:enable, disable: disable};
 
                     if(enabled){
                         this.enableEmitter(emit)
@@ -143,8 +149,11 @@
             },
 
             enableEmitter: function(emit){
+                console.log("Entering Emitter enable %s", emit);
+                console.log("Emitters %s", JSON.stringify(this.emitters));
                 if(this.emitters[emit] && !this.emitters[emit].active){
                     this.emitters[emit].active = true;
+                    console.log("Calling enable");
                     this.emitters[emit].enable();
                 }
             },
@@ -164,9 +173,9 @@
                 }
             },
 
-            addReceiver: function(listen, fire, enabled){
+            addReceiver: function(listen, emit, enabled){
                 if(!this.receivers[listen]) {
-                    this._setSocketListen(listen);
+
                     var enable = function () {
                         if (this.receivers[listen]) {
                             this.receivers[listen].active = true;
@@ -179,7 +188,9 @@
                         }
                     }.bind(this);
 
-                    this.receivers[event] = {fire: fire, active: false, enable: enable, disable: disable};
+                    this.receivers[listen] = {event: listen, emit: emit, active: false, enable: enable, disable: disable};
+
+                    this._setSocketListen(listen);
 
                     if(enabled) this.receivers[listen].enable();
                 }
@@ -227,20 +238,26 @@
 
             _setSocketListen: function(listen){
                 this.socket.on(listen, function(data){
+                    console.log("socket listening for %s", listen);
                     if(this.receivers[listen] && this.receivers[listen].active) {
-                        this._fireMessageEvent(listen, data);
+                        var emit = this.receivers[listen].emit;
+                        console.log("Event %s received firing %s, data: %s", listen, emit , JSON.stringify(data));
+                        this._fireMessageEvent(emit, data);
                     }
                 }.bind(this));
             },
 
-            _fireMessageEvent: function(event, data){
-                this.fire(this.receivers[event].fire, data);
+            _fireMessageEvent: function(evt, data){
+                this.fire(evt, data);
             },
 
             _setControlStateInfo: function( status, connected, error, fireStateChange){
                 this.status = status;
                 this.connected = connected;
                 this.error = error;
+
+                console.log("Status update: Connected: %s Status: %s Error %s" ,this.connected, this.status, this.error);
+
                 if(fireStateChange) this.fireConnectionStateChange();
             },
             

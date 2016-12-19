@@ -47,12 +47,12 @@
                 _register: function(){
                     if(this.emitter){
                         console.log("Adding Emitter: listen:%s fire:%s" , this.tap, this.raise);
-                        this.parentNode.addEmitter(this.listen, this.fire, false);
+                        this.parentNode.addEmitter(this.tap, this.raise, false);
                     }
 
                     if(this.receiver){
                         console.log("Adding Receiver: listen:%s fire:%s" , this.tap, this.raise);
-                        this.parentNode.addReceiver(this.listen, this.fire, false);
+                        this.parentNode.addReceiver(this.tap, this.raise, false);
                     }
                 },
 
